@@ -26,6 +26,8 @@ PNG_TRAILER = b"IEND\xaeB`\x82"
 # The competition caps the image at 1024x1024; the committed
 # entry.png is exactly that size.
 EXPECTED_SIZE = (1024, 1024)
+# The competition also caps the image file at 1 MiB.
+MAX_BYTES = 1024 * 1024
 
 
 def fail(message):
@@ -55,6 +57,9 @@ def check_copy(src, dst):
     if len(dst_bytes) != len(src_bytes):
         fail(f"size mismatch: source is {len(src_bytes)} bytes, "
              f"output is {len(dst_bytes)} bytes")
+    if len(dst_bytes) > MAX_BYTES:
+        fail(f"output is {len(dst_bytes)} bytes, over the "
+             f"{MAX_BYTES}-byte (1 MiB) competition cap")
     if not dst_bytes.startswith(PNG_SIGNATURE):
         fail("output does not start with the PNG signature -- "
              "it is not a PNG file")
@@ -72,13 +77,19 @@ def main():
                        "entry.png")
     if not os.path.isfile(src):
         fail(f"source image is missing: {src}")
+    src_size = os.path.getsize(src)
+    if src_size > MAX_BYTES:
+        fail(f"source image is {src_size} bytes, over the "
+             f"{MAX_BYTES}-byte (1 MiB) competition cap")
     dst = os.environ.get("MAKEFUN_OUT") or DEFAULT_OUT
     parent = os.path.dirname(dst)
     if parent:
         os.makedirs(parent, exist_ok=True)
     shutil.copyfile(src, dst)
     check_copy(src, dst)
-    print("wrote", dst, os.path.getsize(dst), "bytes")
+    with open(dst, "rb") as fh:
+        digest = hashlib.sha256(fh.read()).hexdigest()
+    print("wrote", dst, os.path.getsize(dst), "bytes, sha256", digest)
 
 
 if __name__ == "__main__":

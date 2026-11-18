@@ -7,48 +7,69 @@
 Entry for the make.fun bounty [Sum up 17 November's world news in one image](https://make.fun/bounty/news-image-20261117).
 
 One image, drawn entirely in code: a broadsheet front page for
-**TUESDAY 17 NOVEMBER 2026**, with the day's lead story, the Asia summit,
-seven further stories in labelled panels, and a news ticker along the
-bottom. Every fact is reproduced exactly as supplied in the competition
-brief — no numbers, names or outcomes added.
+**TUESDAY 17 NOVEMBER 2026** carrying **43 stories from 6 continents** —
+14 numbered, illustrated panels, a world map with numbered pins showing
+where each panel story happened, and a 29-item "ALSO ON TUESDAY
+17 NOVEMBER" list. Stories were researched from the day's reporting
+(Level Headlines' Daily Brief, Asas Press's World News Digest and story
+pages, and BBC/Reuters/AP-style feeds); contested claims are attributed
+on the page ("Ukraine says", "Russia: says it downed…"). The full
+research notes are in `STORIES.md`.
 
 ## The day's stories, as drawn
 
-- **Lead — Ukraine strikes the Kerch Bridge to Crimea.** A road span
-  collapsed into the sea; Russia vows to rebuild and strikes Kyiv bridges
-  in reply. *Source note: the day's lead story, per the competition brief;
-  drawn as the large bridge panel under the masthead.*
-- **Trump in Asia.** APEC summit in Shenzhen: Trump, Xi and Putin hold
-  trilateral talks on nuclear risks and Ukraine; in Manila, Trump also
-  signed a trade statement with Thailand. *Source note: second story, per
-  the brief; drawn as three leaders at a summit table with US, Chinese and
-  Russian flags.*
-- **Tankers hit mines in Hormuz.** Two tankers hit naval mines in the
-  Strait of Hormuz; a third US carrier arrives. *Source note: brief item 1;
-  panel glyph: tanker, naval mine, burst.*
-- **Nvidia's first earnings after Huang.** Nvidia reports its first
-  earnings since Jensen Huang's exit; the US tightens AI chip export
-  curbs. *Source note: brief item 2; panel glyph: microchip and rising
-  chart.*
-- **Europe's Rwanda return hub.** Five European nations unveil a joint
-  Rwanda return hub for rejected asylum seekers. *Source note: brief
-  item 3; panel glyph: aircraft and return arrow.*
-- **Japan scrambles jets at Russia.** Japan scrambles fighter jets after
-  Russian aircraft violate its airspace. *Source note: brief item 4; panel
-  glyph: fighter jet over the rising sun.*
-- **Vulcan failure: 40 satellites lost.** A ULA Vulcan rocket fails in
-  flight, destroying 40 Amazon Leo satellites. *Source note: brief item 5;
-  panel glyph: rocket, burst, falling satellites.*
-- **West to Israel: open Gaza aid.** The UK, Australia, Canada and Italy
-  urge Israel to open Gaza crossings for aid. *Source note: brief item 6;
-  panel glyph: aid truck with red cross.*
-- **UN: 1,390 Sudan civilians killed.** A UN report counts at least 1,390
-  civilians killed in Sudan in the first half of 2026. *Source note: brief
-  item 7; panel glyph: memorial candle.*
-- **Ticker.** JPMorgan blames a software bug for a bank outage · US
-  measles cases highest since 1991 · Yemen's government retreats before a
-  Houthi advance. *Source note: the brief's three ticker items, run along
-  the foot of the page.*
+**Top row**
+
+1. **Europe · Ukraine war** — Ukraine says a Crimean (Kerch) Bridge road
+   span fell into the sea; a second strike in two days.
+2. **Middle East · Iran war** — Iran sends drones at a US radar site in
+   Bahrain; all downed, US jets strike Qeshm; Iran says tankers hit
+   mines in Hormuz.
+3. **Asia · Diplomacy** — Trump holds his first Quad summit, in Manila;
+   critical-minerals deals; Putin reaches Shenzhen.
+
+**Panels 4–13**
+
+4. **Africa · Health** — Ebola cases in DR Congo top 11,000 (WHO);
+   about 5,400 deaths.
+5. **Global · Climate** — COP31 in Antalya divided over a fossil-fuel
+   phase-out draft.
+6. **Americas · Health** — US, Mexico and Bolivia lose measles-free
+   status (PAHO); the US counts 5,400+ cases in 2026.
+7. **Americas · Business** — Nvidia's quarterly sales double to
+   $115.8bn; the Dow fell 849 points earlier.
+8. **Middle East · Gaza** — Gaza truce at risk of collapse, the UN is
+   told; 1.4m face acute hunger; winter aid held up.
+9. **Asia · Politics** — Mongolia's president says he will resign;
+   denies a $25m railway claim.
+10. **Europe · Politics** — Serbia's student-led list takes 140 of 250
+    seats as the new parliament is sworn in.
+11. **Asia · Labour** — Bangladesh police tear-gas garment workers
+    demanding Tk 30,000 a month; dozens of factories shut.
+12. **Asia · Air crash** — Russian An-12 crashes near Kemerovo, Siberia;
+    all 19 aboard killed.
+13. **Africa · Justice** — Mozambique puts opposition leader Venâncio
+    Mondlane on trial on 5 charges.
+
+**Strip**
+
+14. **Global · Space** — Voyager 1 reaches one light-day from Earth,
+    the first spacecraft to do so.
+
+**Also on Tuesday (15–43)** — Kyiv's Dnipro bridges hit · Russia's
+record 1,441 drones claim · UN: Ukraine civilian deaths top all of
+2025 · Prague train collision, 46 injured · France strike: 146,000
+march (CGT: 500,000) · Tusk survives no-confidence vote · Deutsche Bank
+falls on data leak · Moldova shuts airspace · Sözcü TV seized · Kahana
+elected Knesset speaker 66–52 · West Bank settler killing · Yemen
+government retreat · Araghchi in Oman · Japan protests Russian airspace
+intrusion · ~4m Syrians returned · Jordan and Iraq block Telegram ·
+Cyclone Akvan · Uttarakhand bus crash, 8 dead · China–Canada tariff
+cuts · Macron in Malaysia · Thailand to scrap US tariffs · IMF lifts
+South Korea to 3.9% · WFP aids 30,000 in Kenya · Norway 3–2 Denmark
+(Haaland twice) · India 2–1 Pakistan, SAFF final · Togo 3–0 Algeria ·
+Pope Leo XIV ends South America tour · Australia eases backpacker visa
+curbs · Apple services outage.
 
 ## How to run
 
@@ -59,9 +80,10 @@ python3 main.py
 Writes `/output/entry.png` (override with the `MAKEFUN_OUT` environment
 variable). `main.py` is a **stdlib-only copier**: the competition's
 server runtime has no Pillow and no system fonts, so `main.py` does no
-drawing — it copies the pre-rendered `entry.png` committed next to it to
-the output path and exits 0. It needs nothing beyond Python 3's standard
-library.
+drawing — it verifies the committed `entry.png` (integrity, 1024×1024
+dimensions, the 1 MiB competition cap), copies it to the output path,
+verifies the copy byte-for-byte, and exits 0. It needs nothing beyond
+Python 3's standard library.
 
 The image itself is generated at build time by `draw.py`:
 
@@ -75,6 +97,6 @@ server) and writes `entry.png` in this repo. The drawing is fully
 deterministic — fixed geometry, no randomness, no clock, no network —
 so repeated runs produce a byte-identical PNG.
 
-The committed `entry.png` is that output: 1024 × 1024 px PNG, 95,801
+The committed `entry.png` is that output: 1024 × 1024 px PNG, 225,554
 bytes, sha256
-`6e311451a87e1f3307eafccb871a27b422eecf8a3b851f71c56053d918cdccb9`.
+`3e069795f1fb087e6edc5614864f21fde1365d3cd2eb220ddadaf005a6ac89d3`.
