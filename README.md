@@ -56,10 +56,24 @@ brief — no numbers, names or outcomes added.
 python3 main.py
 ```
 
-Writes `/output/entry.png`. Requires Python 3.13 and Pillow (PIL); the
-DejaVu fonts in `/usr/share/fonts/truetype/dejavu/` are used for all type.
-The drawing is fully deterministic — fixed geometry, no randomness, no
-clock, no network — so repeated runs produce a byte-identical PNG.
+Writes `/output/entry.png` (override with the `MAKEFUN_OUT` environment
+variable). `main.py` is a **stdlib-only copier**: the competition's
+server runtime has no Pillow and no system fonts, so `main.py` does no
+drawing — it copies the pre-rendered `entry.png` committed next to it to
+the output path and exits 0. It needs nothing beyond Python 3's standard
+library.
+
+The image itself is generated at build time by `draw.py`:
+
+```sh
+python3 draw.py
+```
+
+`draw.py` is the drawing program (Pillow/PIL + the DejaVu fonts in
+`/usr/share/fonts/truetype/dejavu/`, run locally only — never on the
+server) and writes `entry.png` in this repo. The drawing is fully
+deterministic — fixed geometry, no randomness, no clock, no network —
+so repeated runs produce a byte-identical PNG.
 
 The committed `entry.png` is that output: 1024 × 1024 px PNG, 95,801
 bytes, sha256
