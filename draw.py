@@ -18,6 +18,11 @@ path. Regenerate entry.png by running this file after any drawing change:
     python3 draw.py
 
 Requires: Python 3.13, Pillow (PIL). Everything else is stdlib.
+
+LAYOUT (round 3): the page is built for legibility at thumbnail size.
+One dominant lead with a big bridge illustration, one second story, and
+five panels with large headlines (28-32 px) and at most two short
+summary lines each. Nothing on the page is set below 16 px.
 """
 
 import os
@@ -47,7 +52,6 @@ GREY = (70, 74, 80)
 WHITE = (255, 255, 255)
 ORANGE = (232, 119, 34)
 YELLOW = (245, 197, 49)
-GREEN = (34, 110, 62)
 
 MARGIN = 28
 CW = W - 2 * MARGIN  # content width = 968
@@ -106,155 +110,27 @@ def panel(draw, box, width=3):
     draw.rectangle(box, outline=INK, width=width)
 
 
-# --------------------------------------------------------------------------
-# Small illustration glyphs. Each draws inside box (x0, y0, x1, y1).
-# --------------------------------------------------------------------------
+def block_c(draw, cx, y, text, f, max_w, lh=None, fill=INK):
+    """Wrap text and draw it centred, one line under another.
 
-def glyph_tanker_mine(d, box):
-    x0, y0, x1, y1 = box
-    cy = (y0 + y1) // 2
-    # sea waves
-    for i in range(3):
-        wy = y1 - 8 - i * 7
-        d.line([(x0 + 4, wy), (x0 + 26, wy)], fill=SEA, width=3)
-        d.line([(x0 + 58, wy), (x0 + 80, wy)], fill=SEA, width=3)
-    # tanker hull + superstructure
-    d.polygon([(x0 + 6, cy + 2), (x0 + 62, cy + 2), (x0 + 54, cy + 14),
-               (x0 + 14, cy + 14)], fill=INK)
-    d.rectangle([x0 + 14, cy - 10, x0 + 30, cy + 2], fill=INK)
-    d.rectangle([x0 + 40, cy - 6, x0 + 58, cy + 2], fill=GREY)
-    # naval mine: spiked circle
-    mx, my, r = x1 - 22, cy + 2, 11
-    for dx, dy in [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (1, -1),
-                   (-1, 1), (1, 1)]:
-        d.line([(mx, my), (mx + dx * (r + 6), my + dy * (r + 6))],
-               fill=INK, width=3)
-    d.ellipse([mx - r, my - r, mx + r, my + r], fill=RED)
-    # burst between ship and mine
-    bx, by = x0 + 74, cy - 8
-    d.polygon([(bx, by - 10), (bx + 3, by - 3), (bx + 10, by - 4),
-               (bx + 5, by + 1), (bx + 8, by + 8), (bx, by + 4),
-               (bx - 8, by + 8), (bx - 5, by + 1), (bx - 10, by - 4),
-               (bx - 3, by - 3)], fill=ORANGE)
+    Returns the y just past the last line.
+    """
+    if lh is None:
+        lh = line_h(f)
+    for ln in wrap(draw, text, f, max_w):
+        text_c(draw, cx, y, ln, f, fill=fill)
+        y += lh
+    return y
 
 
-def glyph_chip(d, box):
-    x0, y0, x1, y1 = box
-    # microchip
-    cx0, cy0, cx1, cy1 = x0 + 8, y0 + 4, x0 + 48, y1 - 4
-    d.rectangle([cx0, cy0, cx1, cy1], outline=INK, width=4)
-    d.rectangle([cx0 + 11, cy0 + 11, cx1 - 11, cy1 - 11], outline=INK, width=3)
-    for i in range(3):
-        px = cx0 + 8 + i * 12
-        d.line([(px, cy0 - 5), (px, cy0)], fill=INK, width=3)
-        d.line([(px, cy1), (px, cy1 + 5)], fill=INK, width=3)
-        py = cy0 + 8 + i * 10
-        d.line([(cx0 - 5, py), (cx0, py)], fill=INK, width=3)
-        d.line([(cx1, py), (cx1 + 5, py)], fill=INK, width=3)
-    # rising earnings chart
-    pts = [(x0 + 62, y1 - 10), (x0 + 76, y1 - 20), (x0 + 88, y1 - 16),
-           (x0 + 104, y0 + 8)]
-    d.line(pts, fill=GREEN, width=4)
-    d.polygon([(x0 + 104, y0 + 8), (x0 + 94, y0 + 10), (x0 + 102, y0 + 18)],
-              fill=GREEN)
-    d.line([(x0 + 60, y1 - 6), (x1 - 4, y1 - 6)], fill=GREY, width=2)
-
-
-def glyph_plane_return(d, box):
-    x0, y0, x1, y1 = box
-    cy = (y0 + y1) // 2
-    # aeroplane silhouette (side view, pointing right)
-    d.polygon([(x0 + 10, cy), (x0 + 52, cy - 4), (x0 + 70, cy - 16),
-               (x0 + 76, cy - 15), (x0 + 70, cy - 2), (x0 + 78, cy),
-               (x0 + 70, cy + 3), (x0 + 74, cy + 14), (x0 + 68, cy + 14),
-               (x0 + 54, cy + 4), (x0 + 16, cy + 5)], fill=DARK_BLUE)
-    # return (U-turn) arrow beneath
-    ax0, ay0, ax1, ay1 = x0 + 52, cy + 12, x1 - 8, y1 - 2
-    d.arc([ax0, ay0 - 8, ax1, ay1 + 8], start=300, end=140, fill=RED, width=4)
-    d.polygon([(ax0 + 2, ay0 + 2), (ax0 + 14, ay0 - 2), (ax0 + 12, ay0 + 12)],
-              fill=RED)
-
-
-def glyph_jet(d, box):
-    x0, y0, x1, y1 = box
-    cy = (y0 + y1) // 2
-    # rising sun disc (Japan)
-    d.ellipse([x0 + 58, cy - 20, x0 + 98, cy + 20], fill=RED)
-    # fighter jet silhouette crossing it
-    d.polygon([(x0 + 6, cy + 12), (x0 + 34, cy - 2), (x0 + 62, cy - 14),
-               (x0 + 88, cy - 16), (x0 + 66, cy - 4), (x0 + 84, cy + 2),
-               (x0 + 52, cy + 4), (x0 + 62, cy + 14), (x0 + 44, cy + 12),
-               (x0 + 26, cy + 16)], fill=INK)
-    # contrails
-    d.line([(x0 + 4, cy + 18), (x0 + 30, cy + 12)], fill=GREY, width=3)
-    d.line([(x0 + 4, cy + 24), (x0 + 28, cy + 18)], fill=GREY, width=3)
-
-
-def glyph_rocket(d, box):
-    x0, y0, x1, y1 = box
-    # rocket body, tilted, nose up-right
-    d.polygon([(x0 + 26, y1 - 6), (x0 + 34, y1 - 26), (x0 + 52, y0 + 16),
-               (x0 + 62, y0 + 10), (x0 + 66, y0 + 20), (x0 + 48, y1 - 12),
-               (x0 + 38, y1 - 4)], fill=GREY)
-    d.ellipse([x0 + 52, y0 + 12, x0 + 64, y0 + 24], fill=DARK_BLUE)
-    # flame
-    d.polygon([(x0 + 28, y1 - 8), (x0 + 18, y1 + 2), (x0 + 36, y1 - 2)],
-              fill=ORANGE)
-    # explosion burst at the nose
-    bx, by = x0 + 74, y0 + 12
-    d.polygon([(bx, by - 12), (bx + 4, by - 4), (bx + 13, by - 6),
-               (bx + 6, by + 0), (bx + 11, by + 9), (bx + 2, by + 5),
-               (bx - 3, by + 12), (bx - 5, by + 3), (bx - 13, by + 5),
-               (bx - 7, by - 2), (bx - 12, by - 9), (bx - 3, by - 5)],
-              fill=RED)
-    # falling satellites (small squares with panels)
-    for sx, sy in [(x0 + 88, y0 + 30), (x0 + 70, y1 - 16), (x0 + 96, y1 - 8)]:
-        d.rectangle([sx, sy, sx + 8, sy + 8], fill=INK)
-        d.line([(sx - 5, sy + 4), (sx, sy + 4)], fill=INK, width=2)
-        d.line([(sx + 8, sy + 4), (sx + 13, sy + 4)], fill=INK, width=2)
-
-
-def glyph_aid_truck(d, box):
-    x0, y0, x1, y1 = box
-    by = y1 - 12  # ground line
-    # cargo box with red cross
-    d.rectangle([x0 + 6, y0 + 4, x0 + 58, by - 8], outline=INK, width=4)
-    cx, cy = x0 + 32, (y0 + 4 + by - 8) // 2
-    d.rectangle([cx - 4, cy - 11, cx + 4, cy + 11], fill=RED)
-    d.rectangle([cx - 11, cy - 4, cx + 11, cy + 4], fill=RED)
-    # cab
-    d.polygon([(x0 + 62, by - 8), (x0 + 62, y0 + 16), (x0 + 76, y0 + 16),
-               (x0 + 88, by - 8)], fill=DARK_BLUE)
-    # wheels
-    for wx in (x0 + 22, x0 + 74):
-        d.ellipse([wx - 8, by - 10, wx + 8, by + 6], fill=INK)
-    d.line([(x0 + 2, by + 6), (x1 - 2, by + 6)], fill=GREY, width=3)
-
-
-def glyph_candle(d, box):
-    x0, y0, x1, y1 = box
-    cx = (x0 + x1) // 2
-    # flame
-    d.ellipse([cx - 7, y0 + 2, cx + 7, y0 + 24], fill=ORANGE)
-    d.ellipse([cx - 3, y0 + 10, cx + 3, y0 + 24], fill=YELLOW)
-    # candle body
-    d.rectangle([cx - 13, y0 + 28, cx + 13, y1 - 8], fill=WHITE)
-    d.rectangle([cx - 13, y0 + 28, cx + 13, y1 - 8], outline=INK, width=3)
-    d.line([(cx - 20, y1 - 4), (cx + 20, y1 - 4)], fill=INK, width=3)
-
-
-GLYPHS = [glyph_tanker_mine, glyph_chip, glyph_plane_return, glyph_jet,
-          glyph_rocket, glyph_aid_truck, glyph_candle]
-
-LABELS = [
-    "TANKERS HIT MINES IN HORMUZ",
-    "NVIDIA'S FIRST EARNINGS AFTER HUANG",
-    "EUROPE'S RWANDA RETURN HUB",
-    "JAPAN SCRAMBLES JETS AT RUSSIA",
-    "VULCAN FAILURE: 40 SATELLITES LOST",
-    "WEST TO ISRAEL: OPEN GAZA AID",
-    "UN: 1,390 SUDAN CIVILIANS KILLED",
-]
+def block_l(draw, x, y, text, f, max_w, lh=None, fill=INK):
+    """Wrap text and draw it left-aligned. Returns the y past the end."""
+    if lh is None:
+        lh = line_h(f)
+    for ln in wrap(draw, text, f, max_w):
+        text_l(draw, x, y, ln, f, fill=fill)
+        y += lh
+    return y
 
 
 # --------------------------------------------------------------------------
@@ -269,8 +145,10 @@ def draw_bridge(d, box):
     d.rectangle([x0, y0, x1, sea_y], fill=SKY)
     d.rectangle([x0, sea_y, x1, y1], fill=SEA)
     # clouds
-    for cx, cy, s in [(x0 + 90, y0 + 22, 1), (x0 + 300, y0 + 14, 0), (x1 - 120, y0 + 20, 1)]:
-        d.ellipse([cx - 34 - s * 8, cy - 10, cx + 34 + s * 8, cy + 12], fill=WHITE)
+    for cx, cy, s in [(x0 + 90, y0 + 16, 1), (x0 + 300, y0 + 10, 0),
+                      (x1 - 120, y0 + 14, 1)]:
+        d.ellipse([cx - 34 - s * 8, cy - 10, cx + 34 + s * 8, cy + 12],
+                  fill=WHITE)
     deck_y = y0 + int((y1 - y0) * 0.52)
     tower_top = y0 + 4
     # towers
@@ -303,7 +181,8 @@ def draw_bridge(d, box):
     d.polygon([(x0 + 838, deck_y - 6), (x0 + 822, deck_y), (x0 + 838, deck_y + 6)],
               fill=INK)
     # splashes and foam
-    for sx, sy in [(x0 + 636, y1 - 30), (x0 + 700, y1 - 16), (x0 + 600, y1 - 12)]:
+    for sx, sy in [(x0 + 636, y1 - 30), (x0 + 700, y1 - 16),
+                   (x0 + 600, y1 - 12)]:
         d.arc([sx - 20, sy - 12, sx + 20, sy + 12], start=180, end=360,
               fill=WHITE, width=4)
     for wx in range(x0 + 30, x1 - 30, 64):
@@ -315,22 +194,23 @@ def draw_summit(d, box):
     """Second-story art: three leaders at a summit table, flags behind."""
     x0, y0, x1, y1 = box
     cx = (x0 + x1) // 2
-    centres = [cx - 118, cx, cx + 118]
-    flag_y0, flag_y1 = y0 + 2, y0 + 44
+    centres = [cx - 108, cx, cx + 108]
+    flag_y0, flag_y1 = y0 + 2, y0 + 40
     # flags: USA, China, Russia
     for i, fx in enumerate(centres):
-        fw = 62
+        fw = 58
         fx0, fx1 = fx - fw // 2, fx + fw // 2
-        d.line([(fx, flag_y0), (fx, y1 - 46)], fill=GREY, width=3)
+        d.line([(fx, flag_y0), (fx, y1 - 42)], fill=GREY, width=3)
         if i == 0:  # USA: stripes + blue canton
             d.rectangle([fx0, flag_y0, fx1, flag_y1], fill=WHITE, outline=INK)
-            for s in range(0, 42, 12):
-                d.rectangle([fx0, flag_y0 + s, fx1, flag_y0 + s + 6], fill=RED)
-            d.rectangle([fx0, flag_y0, fx0 + 26, flag_y0 + 20], fill=DARK_BLUE)
+            for s in range(0, 38, 11):
+                d.rectangle([fx0, flag_y0 + s, fx1, flag_y0 + s + 5], fill=RED)
+            d.rectangle([fx0, flag_y0, fx0 + 24, flag_y0 + 18], fill=DARK_BLUE)
         elif i == 1:  # China: red field, yellow stars
             d.rectangle([fx0, flag_y0, fx1, flag_y1], fill=RED, outline=INK)
-            d.ellipse([fx0 + 6, flag_y0 + 6, fx0 + 16, flag_y0 + 16], fill=YELLOW)
-            for sx, sy in [(20, 4), (24, 12), (20, 20)]:
+            d.ellipse([fx0 + 6, flag_y0 + 5, fx0 + 15, flag_y0 + 14],
+                      fill=YELLOW)
+            for sx, sy in [(19, 3), (23, 10), (19, 17)]:
                 d.ellipse([fx0 + sx, flag_y0 + sy, fx0 + sx + 5,
                            flag_y0 + sy + 5], fill=YELLOW)
         else:  # Russia: white / blue / red
@@ -341,21 +221,76 @@ def draw_summit(d, box):
                         fill=DARK_BLUE)
             d.rectangle([fx0, flag_y0 + 2 * third, fx1, flag_y1], fill=RED)
     # leaders: head + shoulders behind the table
-    head_y = y0 + 56
+    head_y = y0 + 50
     for fx in centres:
-        d.ellipse([fx - 17, head_y, fx + 17, head_y + 34], fill=INK)
-        d.pieslice([fx - 37, head_y + 24, fx + 37, head_y + 88], start=180,
+        d.ellipse([fx - 16, head_y, fx + 16, head_y + 32], fill=INK)
+        d.pieslice([fx - 35, head_y + 22, fx + 35, head_y + 82], start=180,
                    end=360, fill=INK)
     # table
-    table_y = y0 + 104
-    d.polygon([(x0 + 16, table_y), (x1 - 16, table_y), (x1 - 34, y1 - 4),
-               (x0 + 34, y1 - 4)], fill=(96, 66, 38))
-    d.line([(x0 + 16, table_y), (x1 - 16, table_y)], fill=INK, width=4)
+    table_y = y0 + 96
+    d.polygon([(x0 + 14, table_y), (x1 - 14, table_y), (x1 - 30, y1 - 4),
+               (x0 + 30, y1 - 4)], fill=(96, 66, 38))
+    d.line([(x0 + 14, table_y), (x1 - 14, table_y)], fill=INK, width=4)
+
+
+# --------------------------------------------------------------------------
+# Page content
+# --------------------------------------------------------------------------
+
+LEAD_HEADLINE = "UKRAINE STRIKES KERCH BRIDGE TO CRIMEA"
+LEAD_DECK = ("A road span collapses into the sea. Russia vows to rebuild "
+             "the bridge -- and strikes Kyiv bridges in reply.")
+
+SECOND_KICKER = "APEC SUMMIT · SHENZHEN"
+SECOND_HEADLINE = "TRUMP, XI AND PUTIN HOLD TRILATERAL TALKS"
+SECOND_DECK = ("Nuclear risks and Ukraine top the agenda. In Manila, "
+               "Trump also signs a trade statement with Thailand.")
+
+# Five panels: (headline, summary). The narrow top row takes the
+# headlines whose two-line splits fit its width; the wide bottom row
+# takes the two longest. Regional spread: Hormuz and Gaza (Middle
+# East), Japan/Russia (Asia-Pacific), Europe, space.
+PANELS_TOP = [
+    ("TANKERS HIT MINES IN HORMUZ",
+     "Two tankers hit mines in the strait; a third US carrier "
+     "arrives."),
+    ("JAPAN SCRAMBLES JETS AT RUSSIA",
+     "Jets scramble after Russian aircraft violate its airspace."),
+    ("WEST TO ISRAEL: OPEN GAZA AID",
+     "UK, Australia, Canada and Italy urge Israel to open "
+     "crossings."),
+]
+PANELS_BOTTOM = [
+    ("EUROPE'S RWANDA RETURN HUB",
+     "Five nations unveil a joint hub for rejected asylum seekers."),
+    ("VULCAN FAILURE: 40 SATELLITES LOST",
+     "A ULA Vulcan rocket fails in flight, destroying 40 Amazon "
+     "Leo satellites."),
+]
+
+TICKER_1 = ("JPMORGAN BLAMES SOFTWARE BUG FOR BANK OUTAGE  •  "
+            "US MEASLES HIGHEST SINCE 1991")
+TICKER_2 = "UN: 1,390 SUDAN CIVILIANS KILLED"
 
 
 # --------------------------------------------------------------------------
 # Page assembly
 # --------------------------------------------------------------------------
+
+def story_panel(d, box, headline, summary, head_size, sum_size):
+    """One news panel: big centred headline, up to two summary lines."""
+    x0, y0, x1, y1 = box
+    panel(d, box, width=2)
+    cx = (x0 + x1) // 2
+    inner_w = (x1 - x0) - 16
+    f_head = font(F_SANS_BOLD, head_size)
+    y = y0 + 11
+    y = block_c(d, cx, y, headline, f_head, inner_w,
+                lh=int(head_size * 1.13))
+    y += 5
+    f_sum = font(F_SANS, sum_size)
+    block_c(d, cx, y, summary, f_sum, inner_w, lh=int(sum_size * 1.22))
+
 
 def build():
     img = Image.new("RGB", (W, H), PAPER)
@@ -369,84 +304,59 @@ def build():
 
     # ---- masthead ------------------------------------------------------
     f_title = fit_font(d, "THE WORLD IN A DAY", F_SERIF_BOLD, 760, 62)
-    text_c(d, cx, 26, "THE WORLD IN A DAY", f_title)
-    d.line([(MARGIN, 100), (W - MARGIN, 100)], fill=INK, width=4)
-    d.line([(MARGIN, 106), (W - MARGIN, 106)], fill=INK, width=1)
+    text_c(d, cx, 24, "THE WORLD IN A DAY", f_title)
+    d.line([(MARGIN, 98), (W - MARGIN, 98)], fill=INK, width=4)
+    d.line([(MARGIN, 104), (W - MARGIN, 104)], fill=INK, width=1)
 
     f_date = fit_font(d, "TUESDAY 17 NOVEMBER 2026", F_SANS_BOLD, CW - 8, 88)
-    text_c(d, cx, 116, "TUESDAY 17 NOVEMBER 2026", f_date, fill=RED)
+    text_c(d, cx, 112, "TUESDAY 17 NOVEMBER 2026", f_date, fill=RED)
     d.line([(MARGIN, 196), (W - MARGIN, 196)], fill=INK, width=3)
 
     # ---- lead story ----------------------------------------------------
-    lead = (MARGIN, 208, W - MARGIN, 512)
+    lead = (MARGIN, 208, W - MARGIN, 500)
     panel(d, lead)
     lx0, ly0, lx1, ly1 = lead
-    f_head = font(F_SANS_BOLD, 43)
-    lines = wrap(d, "UKRAINE STRIKES KERCH BRIDGE TO CRIMEA", f_head, CW - 32)
-    y = ly0 + 12
-    for ln in lines:
-        text_c(d, cx, y, ln, f_head)
-        y += line_h(f_head)
-    f_deck = font(F_SANS, 20)
-    deck = ("A road span collapses into the sea. Russia vows to rebuild "
-            "the bridge -- and strikes Kyiv bridges in reply.")
-    y += 2
-    for ln in wrap(d, deck, f_deck, CW - 48):
-        text_c(d, cx, y, ln, f_deck)
-        y += line_h(f_deck)
-    draw_bridge(d, (lx0 + 14, ly1 - 126, lx1 - 14, ly1 - 14))
+    f_head = font(F_SANS_BOLD, 50)
+    y = block_c(d, cx, ly0 + 14, LEAD_HEADLINE, f_head, CW - 48, lh=60)
+    f_deck = font(F_SANS, 21)
+    y = block_c(d, cx, y + 6, LEAD_DECK, f_deck, CW - 68, lh=26)
+    draw_bridge(d, (lx0 + 14, y + 8, lx1 - 14, ly1 - 12))
 
     # ---- second story --------------------------------------------------
-    sec = (MARGIN, 522, W - MARGIN, 694)
+    sec = (MARGIN, 510, W - MARGIN, 672)
     panel(d, sec)
     sx0, sy0, sx1, sy1 = sec
-    f_kick = font(F_SANS_BOLD, 16)
-    text_l(d, sx0 + 16, sy0 + 12, "APEC SUMMIT · SHENZHEN", f_kick, fill=RED)
-    f_head2 = font(F_SANS_BOLD, 31)
-    y = sy0 + 38
-    for ln in wrap(d, "TRUMP, XI AND PUTIN HOLD TRILATERAL TALKS",
-                   f_head2, 520):
-        text_l(d, sx0 + 16, y, ln, f_head2)
-        y += line_h(f_head2)
+    f_kick = font(F_SANS_BOLD, 17)
+    text_l(d, sx0 + 16, sy0 + 12, SECOND_KICKER, f_kick, fill=RED)
+    f_head2 = font(F_SANS_BOLD, 32)
+    y = block_l(d, sx0 + 16, sy0 + 38, SECOND_HEADLINE, f_head2, 590, lh=38)
     f_deck2 = font(F_SANS, 18)
-    deck2 = ("Nuclear risks and Ukraine top the agenda. In Manila, Trump "
-             "also signs a trade statement with Thailand.")
-    for ln in wrap(d, deck2, f_deck2, 520):
-        text_l(d, sx0 + 16, y, ln, f_deck2)
-        y += line_h(f_deck2)
-    draw_summit(d, (sx0 + 560, sy0 + 14, sx1 - 14, sy1 - 14))
+    block_l(d, sx0 + 16, y + 2, SECOND_DECK, f_deck2, 590, lh=22)
+    draw_summit(d, (sx0 + 634, sy0 + 14, sx1 - 14, sy1 - 14))
 
-    # ---- seven small panels --------------------------------------------
-    grid_y0, grid_y1 = 704, 944
-    row_h = (grid_y1 - grid_y0 - 8) // 2
-    f_label = font(F_SANS_BOLD, 17)
-    cells = []
-    for r in range(2):
-        n = 4 if r == 0 else 3
-        cw = CW // n
-        for c in range(n):
-            x0 = MARGIN + c * cw
-            x1 = x0 + cw - (8 if c < n - 1 else 0)
-            y0 = grid_y0 + r * (row_h + 8)
-            cells.append((x0, y0, x1, y0 + row_h))
-    for (x0, y0, x1, y1), glyph, label in zip(cells, GLYPHS, LABELS):
-        panel(d, (x0, y0, x1, y1), width=2)
-        glyph(d, (x0 + (x1 - x0 - 110) // 2, y0 + 6,
-                  x0 + (x1 - x0 + 110) // 2, y0 + 50))
-        ly = y0 + 56
-        for ln in wrap(d, label, f_label, (x1 - x0) - 16):
-            text_c(d, (x0 + x1) // 2, ly, ln, f_label)
-            ly += int(f_label.size * 1.15)
+    # ---- five panels: three over two ------------------------------------
+    top_y0, top_y1 = 682, 808
+    bot_y0, bot_y1 = 818, 946
+    n = len(PANELS_TOP)
+    pw = (CW - (n - 1) * 8) // n
+    for i, (headline, summary) in enumerate(PANELS_TOP):
+        x0 = MARGIN + i * (pw + 8)
+        x1 = x0 + pw if i < n - 1 else W - MARGIN
+        story_panel(d, (x0, top_y0, x1, top_y1), headline, summary, 28, 17)
+    n = len(PANELS_BOTTOM)
+    pw = (CW - (n - 1) * 8) // n
+    for i, (headline, summary) in enumerate(PANELS_BOTTOM):
+        x0 = MARGIN + i * (pw + 8)
+        x1 = x0 + pw if i < n - 1 else W - MARGIN
+        story_panel(d, (x0, bot_y0, x1, bot_y1), headline, summary, 32, 17)
 
     # ---- bottom ticker ---------------------------------------------------
-    tick = (MARGIN, 954, W - MARGIN, 1006)
+    tick = (MARGIN, 956, W - MARGIN, 1000)
     d.rectangle(tick, fill=INK)
-    f_tick = font(F_SANS_BOLD, 16)
-    text_c(d, cx, 962,
-           "JPMORGAN BLAMES SOFTWARE BUG FOR BANK OUTAGE  •  "
-           "US MEASLES CASES HIGHEST SINCE 1991", f_tick, fill=WHITE)
-    text_c(d, cx, 984, "YEMEN GOVERNMENT RETREATS BEFORE HOUTHI ADVANCE",
-           f_tick, fill=YELLOW)
+    f_tick1 = fit_font(d, TICKER_1, F_SANS_BOLD, CW - 16, 19)
+    text_c(d, cx, 959, TICKER_1, f_tick1, fill=WHITE)
+    f_tick2 = font(F_SANS_BOLD, 21)
+    text_c(d, cx, 979, TICKER_2, f_tick2, fill=YELLOW)
 
     return img
 
